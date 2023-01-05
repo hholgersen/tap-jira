@@ -17,17 +17,25 @@ REQUIRED_CONFIG_KEYS_CLOUD = ["start_date",
                               "refresh_token",
                               "oauth_client_id",
                               "oauth_client_secret"]
-REQUIRED_CONFIG_KEYS_HOSTED = ["start_date",
+REQUIRED_CONFIG_KEYS_HOSTED_BASIC_AUTH = ["start_date",
                                "username",
                                "password",
                                "base_url",
                                "user_agent"]
+REQUIRED_CONFIG_KEYS_HOSTED_PAT = ["start_date",
+                                "personal_access_token",
+                                "base_url",
+                                "user_agent"]
+
 
 
 def get_args():
     unchecked_args = utils.parse_args([])
     if 'username' in unchecked_args.config.keys():
-        return utils.parse_args(REQUIRED_CONFIG_KEYS_HOSTED)
+        return utils.parse_args(REQUIRED_CONFIG_KEYS_HOSTED_BASIC_AUTH)
+
+    if 'personal_access_token' in unchecked_args.config.keys():
+        return utils.parse_args(REQUIRED_CONFIG_KEYS_HOSTED_PAT)
 
     return utils.parse_args(REQUIRED_CONFIG_KEYS_CLOUD)
 
