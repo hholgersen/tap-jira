@@ -46,6 +46,19 @@ This tap:
     }
     ```
 
+   or (for Personal Authentication Token):
+
+   ```json
+    {
+        "start_date": "2010-01-01",
+        "personal_acccess_token": "<your PAT>",
+        "base_url": "https://your-jira-domain",
+        "user_agent": "<user-agent>",
+        "request_timeout": 300,
+        "groups": "jira-administrators, site-admins, jira-software-users"
+    }
+    ```
+
    or (for OAuth):
 
    ```json
