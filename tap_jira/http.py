@@ -3,7 +3,7 @@ import time
 import threading
 import re
 from requests.exceptions import (HTTPError, Timeout)
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, 
 import requests
 from singer import metrics
 import singer
@@ -22,6 +22,13 @@ LOGGER = singer.get_logger()
 
 # timeout requests after 300 seconds
 REQUEST_TIMEOUT = 300
+
+class BearerAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self.token = token
+    def __call__(self, r):
+        r.headers["authorization"] = "Bearer " + self.token
+        return r
 
 class JiraError(Exception):
     def __init__(self, message=None, response=None):
@@ -186,7 +193,7 @@ class Client():
             self.test_credentials_are_authorized()
         elif self.use_personal_access_token:
             LOGGER.info("Using personal access token authentication")
-            self.auth = None
+            self.auth = BearerAuth(config.get('personal_access_token'))
             self.base_url = config.get("base_url")
             self.access_token = config.get('personal_access_token')
             self.test_basic_credentials_are_authorized()
