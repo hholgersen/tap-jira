@@ -223,6 +223,8 @@ class Client():
             headers['Accept'] = 'application/json'
             headers['Authorization'] = 'Bearer {}'.format(self.access_token)
 
+        LOGGER.info(f"Using header {headers}")
+
         return headers
 
     @backoff.on_exception(backoff.expo,
