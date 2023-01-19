@@ -3,7 +3,7 @@ import time
 import threading
 import re
 from requests.exceptions import (HTTPError, Timeout)
-from requests.auth import HTTPBasicAuth, 
+from requests.auth import HTTPBasicAuth
 import requests
 from singer import metrics
 import singer
