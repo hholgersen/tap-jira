@@ -300,6 +300,14 @@ class Client():
 
     def test_credentials_are_authorized(self):
         # Assume that everyone has issues, so we try and hit that endpoint
+
+        self.request("issues", "GET", "/rest/api/2/search",
+                     params={"maxResults": 1})
+
+    def test_basic_credentials_are_authorized(self):
+        # Make a call to myself endpoint for verify creds
+        # Here, we are retrieving serverInfo for the Jira instance by which credentials will also be verified.
+        # Assign True value to is_on_prem_instance property for on-prem Jira instance
         deployment_type = self.request("users", "GET", "/rest/api/2/serverInfo").get("deploymentType")
 
         if deployment_type == "Server":
@@ -309,20 +317,6 @@ class Client():
         else:
             raise Exception(f"Unknown deployment type { deployment_type }")
 
-
-        self.request("issues", "GET", "/rest/api/2/search",
-                     params={"maxResults": 1})
-
-    def test_basic_credentials_are_authorized(self):
-        # Make a call to myself endpoint for verify creds
-        # Here, we are retrieving serverInfo for the Jira instance by which credentials will also be verified.
-        # Assign True value to is_on_prem_instance property for on-prem Jira instance
-
-        deployment_type = self.request("users","GET","/rest/api/2/serverInfo").get('deploymentType')
-        if deployment_type is None:
-            raise Exception("No Server type detected")
-
-        self.is_on_prem_instance = deployment_type == "Server"
 
 class Paginator():
     def __init__(self, client, page_num=0, order_by=None, items_key="values"):
