@@ -167,6 +167,7 @@ class Client():
     def __init__(self, config):
         self.is_cloud = 'oauth_client_id' in config.keys()
         self.use_personal_access_token = 'personal_access_token' in config.keys()
+        self.use_access_token = 'access_token' in config.keys()
         self.session = requests.Session()
         self.next_request_at = datetime.now()
         self.user_agent = config.get("user_agent")
@@ -233,7 +234,7 @@ class Client():
                           max_tries=6,
                           giveup=lambda e: not should_retry_httperror(e))
     def send(self, method, path, headers={}, **kwargs):
-        if self.access_token:
+        if self.use_access_token:
             # OAuth Path
             request = requests.Request(method,
                                        self.url(path),
