@@ -219,7 +219,7 @@ class Client():
         if self.user_agent:
             headers["User-Agent"] = self.user_agent
 
-        if self.access_token:
+        if self.use_access_token:
             # Add OAuth Headers
             headers['Accept'] = 'application/json'
             headers['Authorization'] = 'Bearer {}'.format(self.access_token)
