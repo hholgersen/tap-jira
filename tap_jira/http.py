@@ -255,6 +255,8 @@ class Client():
                                        auth=self.auth,
                                        headers=self._headers(headers),
                                        **kwargs)
+
+        LOGGER.info(f"Send has been invoked at endpoint {path}")
         return self.session.send(request.prepare(), timeout=self.timeout)
 
     @backoff.on_exception(backoff.constant,
@@ -312,7 +314,7 @@ class Client():
         # Here, we are retrieving serverInfo for the Jira instance by which credentials will also be verified.
         # Assign True value to is_on_prem_instance property for on-prem Jira instance
         deployment_type = self.request("users", "GET", "/rest/api/2/serverInfo").get("deploymentType")
-
+        LOGGER.info("Testing basic credentials")
         if deployment_type == "Server":
             self.is_on_prem_instance = True
         elif deployment_type == "Cloud":
