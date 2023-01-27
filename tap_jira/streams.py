@@ -55,17 +55,17 @@ def raise_if_bookmark_cannot_advance(worklogs):
 def sync_sub_streams(page):
     for issue in page:
         comments = issue["fields"].pop("comment")["comments"]
-        if comments and Context.is_selected(ISSUE_COMMENTS.tap_stream_id):
+        if comments: # and Context.is_selected(ISSUE_COMMENTS.tap_stream_id):
             for comment in comments:
                 comment["issueId"] = issue["id"]
             ISSUE_COMMENTS.write_page(comments)
         changelogs = issue.pop("changelog")["histories"]
-        if changelogs and Context.is_selected(CHANGELOGS.tap_stream_id):
+        if changelogs: # and Context.is_selected(CHANGELOGS.tap_stream_id):
             for changelog in changelogs:
                 changelog["issueId"] = issue["id"]
             CHANGELOGS.write_page(changelogs)
         transitions = issue.pop("transitions")
-        if transitions and Context.is_selected(ISSUE_TRANSITIONS.tap_stream_id):
+        if transitions: # and Context.is_selected(ISSUE_TRANSITIONS.tap_stream_id):
             for transition in transitions:
                 transition["issueId"] = issue["id"]
             ISSUE_TRANSITIONS.write_page(transitions)
@@ -142,7 +142,7 @@ class Projects(Stream):
             # appears.
             project.pop("versions", None)
         self.write_page(projects)
-        if Context.is_selected(VERSIONS.tap_stream_id):
+        if True: #Context.is_selected(VERSIONS.tap_stream_id):
             for project in projects:
                 path = "/rest/api/2/project/{}/version".format(project["id"])
                 pager = Paginator(Context.client, order_by="sequence")
@@ -151,7 +151,7 @@ class Projects(Stream):
                     for each_page in page:
                         each_page = update_user_date(each_page)
                     VERSIONS.write_page(page)
-        if Context.is_selected(COMPONENTS.tap_stream_id):
+        if True: #Context.is_selected(COMPONENTS.tap_stream_id):
             for project in projects:
                 path = "/rest/api/2/project/{}/component".format(project["id"])
                 pager = Paginator(Context.client)
@@ -178,7 +178,7 @@ class Projects(Stream):
                 # appears.
                 project.pop("versions", None)
             self.write_page(projects.get('values'))
-            if Context.is_selected(VERSIONS.tap_stream_id):
+            if True: #Context.is_selected(VERSIONS.tap_stream_id):
                 for project in projects.get('values'):
                     path = "/rest/api/2/project/{}/version".format(project["id"])
                     pager = Paginator(Context.client, order_by="sequence")
@@ -188,7 +188,7 @@ class Projects(Stream):
                             each_page = update_user_date(each_page)
 
                         VERSIONS.write_page(page)
-            if Context.is_selected(COMPONENTS.tap_stream_id):
+            if True: #Context.is_selected(COMPONENTS.tap_stream_id):
                 for project in projects.get('values'):
                     path = "/rest/api/2/project/{}/component".format(project["id"])
                     pager = Paginator(Context.client)
@@ -373,8 +373,7 @@ class DependencyException(Exception):
 
 def validate_dependencies():
     errs = []
-    selected = [s.tap_stream_id for s in Context.catalog.streams
-                if Context.is_selected(s.tap_stream_id)]
+    selected = [s.tap_stream_id for s in Context.catalog.streams ] #if Context.is_selected(s.tap_stream_id)]
     msg_tmpl = ("Unable to extract {0} data. "
                 "To receive {0} data, you also need to select {1}.")
     if VERSIONS.tap_stream_id in selected and PROJECTS.tap_stream_id not in selected:
