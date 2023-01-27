@@ -134,6 +134,8 @@ class Projects(Stream):
         projects = Context.client.request(
             self.tap_stream_id, "GET", "/rest/api/2/project",
             params={"expand": "description,lead,url,projectKeys"})
+
+        LOGGER.info(f"WE ARE IN THE PROJECTS. FOUND {len(projects)} projects.")
         for project in projects:
             # The Jira documentation suggests that a "versions" key may appear
             # in the project, but from my testing that hasn't been the case
@@ -207,8 +209,10 @@ class Projects(Stream):
         # instances, the new endpoint would be called which also suggests pagination, but for on prm instances the old endpoint would be called.
         # As we want to include both the cloud as well as the on-prem servers.
         if Context.client.is_on_prem_instance:
+            LOGGER.info("YAY WE ARE SYNCING ON PREM")
             self.sync_on_prem()
         else:
+            LOGGER.info("WTF WE ARE ON CLOUD?!?")
             self.sync_cloud()
 
 class ProjectTypes(Stream):

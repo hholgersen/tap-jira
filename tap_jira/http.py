@@ -292,7 +292,7 @@ class Client():
         # Here, we are retrieving serverInfo for the Jira instance by which credentials will also be verified.
         # Assign True value to is_on_prem_instance property for on-prem Jira instance
         deployment_type = self.request("users", "GET", "/rest/api/2/serverInfo").get("deploymentType")
-        LOGGER.info("Testing basic credentials")
+        LOGGER.info(f"Testing basic credentials, finding deployment type {deployment_type}")
         if deployment_type == "Server":
             self.is_on_prem_instance = True
         elif deployment_type == "Cloud":

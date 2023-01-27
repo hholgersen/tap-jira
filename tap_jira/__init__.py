@@ -96,16 +96,17 @@ def output_schema(stream):
 def sync():
     streams_.validate_dependencies()
 
-
+    LOGGER.info("TRIGGERED SYNC FUNCTION")
     # two loops through streams are necessary so that the schema is output
     # BEFORE syncing any streams. Otherwise, the first stream might generate
     # data for the second stream, but the second stream hasn't output its
     # schema yet
     for stream in streams_.ALL_STREAMS:
+        LOGGER.info("STARTING OUTPUTTING SHIT")
         output_schema(stream)
 
     for stream in streams_.ALL_STREAMS:
-        if not Context.is_selected(stream.tap_stream_id):
+        if not True: #Context.is_selected(stream.tap_stream_id):
             continue
 
         # indirect_stream indicates the data for the stream comes from some
@@ -140,6 +141,7 @@ def main():
             discover().dump()
             print()
         else:
+            LOGGER.info("IN THE BLOCK THAT STARTS STREAM SYNC")
             sync()
     finally:
         if Context.client and Context.client.login_timer:
