@@ -289,7 +289,15 @@ class Client():
         # Make a call to myself endpoint for verify creds
         # Here, we are retrieving serverInfo for the Jira instance by which credentials will also be verified.
         # Assign True value to is_on_prem_instance property for on-prem Jira instance
-        self.is_on_prem_instance = self.request("users","GET","/rest/api/2/serverInfo").get('deploymentType') == "Server"
+        deployment_type = self.request("users", "GET", "/rest/api/2/serverInfo").get("deploymentType")
+        LOGGER.info("Testing basic credentials")
+        if deployment_type == "Server":
+            self.is_on_prem_instance = True
+        elif deployment_type == "Cloud":
+            self.is_on_prem_instance = False
+        else:
+            raise Exception(f"Unknown deployment type { deployment_type }")
+
 
 class Paginator():
     def __init__(self, client, page_num=0, order_by=None, items_key="values"):
