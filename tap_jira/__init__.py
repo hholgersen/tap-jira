@@ -35,6 +35,7 @@ def get_args():
         return utils.parse_args(REQUIRED_CONFIG_KEYS_HOSTED_BASIC_AUTH)
 
     if 'personal_access_token' in unchecked_args.config.keys():
+        LOGGER.info("PERSONAL ACCESS TOKEN IS RECOGNIZED!!!")
         return utils.parse_args(REQUIRED_CONFIG_KEYS_HOSTED_PAT)
 
     return utils.parse_args(REQUIRED_CONFIG_KEYS_CLOUD)
