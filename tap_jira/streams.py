@@ -146,24 +146,28 @@ class Projects(Stream):
             # appears.
             project.pop("versions", None)
         self.write_page(projects)
-        if True: #Context.is_selected(VERSIONS.tap_stream_id):
+        if Context.is_selected(VERSIONS.tap_stream_id):
             for project in projects:
                 path = "/rest/api/2/project/{}/version".format(project["id"])
                 pager = Paginator(Context.client, order_by="sequence")
-                for page in pager.pages(VERSIONS.tap_stream_id, "GET", path):
-                    # Transform userReleaseDate and userStartDate values to 'yyyy-mm-dd' format.
-                    for each_page in page:
-                        each_page = update_user_date(each_page)
-                    VERSIONS.write_page(page)
-        if True: #Context.is_selected(COMPONENTS.tap_stream_id):
+                try:
+                    for page in pager.pages(VERSIONS.tap_stream_id, "GET", path):
+                        # Transform userReleaseDate and userStartDate values to 'yyyy-mm-dd' format.
+                        for each_page in page:
+                            each_page = update_user_date(each_page)
+                        VERSIONS.write_page(page)
+                except Exception as e:
+                    LOGGER.warn(f"Excepted on {e}")
+
+        if Context.is_selected(COMPONENTS.tap_stream_id):
             for project in projects:
                 path = "/rest/api/2/project/{}/component".format(project["id"])
                 pager = Paginator(Context.client)
-                for page in pager.pages(COMPONENTS.tap_stream_id, "GET", path):
-                    try:
+                try:
+                    for page in pager.pages(COMPONENTS.tap_stream_id, "GET", path):
                         COMPONENTS.write_page(page)
-                    except Exception as e:
-                        LOGGER.warn(f"Exception when writing: {e}")
+                except Exception as e:
+                    LOGGER.warn(f"Exception when writing: {e}")
 
     def sync_cloud(self):
         """ Sync function for the cloud instances"""
@@ -189,25 +193,27 @@ class Projects(Stream):
                 for project in projects.get('values'):
                     path = "/rest/api/2/project/{}/version".format(project["id"])
                     pager = Paginator(Context.client, order_by="sequence")
-                    for page in pager.pages(VERSIONS.tap_stream_id, "GET", path):
-                        # Transform userReleaseDate and userStartDate values to 'yyyy-mm-dd' format.
-                        for each_page in page:
-                            each_page = update_user_date(each_page)
+                    try:
+                        for page in pager.pages(VERSIONS.tap_stream_id, "GET", path):
+                            # Transform userReleaseDate and userStartDate values to 'yyyy-mm-dd' format.
+                            for each_page in page:
+                                each_page = update_user_date(each_page)
 
-                        try:
                             COMPONENTS.write_page(page)
-                        except Exception as e:
-                            LOGGER.warn(f"Exception when writing: {e}")
+
+                    except Exception as e:
+                        LOGGER.warn(f"Exception when writing: {e}")
 
             if True: #Context.is_selected(COMPONENTS.tap_stream_id):
                 for project in projects.get('values'):
                     path = "/rest/api/2/project/{}/component".format(project["id"])
                     pager = Paginator(Context.client)
-                    for page in pager.pages(COMPONENTS.tap_stream_id, "GET", path):
-                        try:
+                    try:
+                        for page in pager.pages(COMPONENTS.tap_stream_id, "GET", path):
+
                             COMPONENTS.write_page(page)
-                        except Exception as e:
-                            LOGGER.warn(f"Exception when writing: {e}")
+                    except Exception as e:
+                        LOGGER.warn(f"Exception when writing: {e}")
 
             # `isLast` corresponds to whether it is the last page or not.
             if projects.get("isLast"):
@@ -281,27 +287,32 @@ class Issues(Stream):
                   "jql": jql}
         page_num = Context.bookmark(page_num_offset) or 0
         pager = Paginator(Context.client, items_key="issues", page_num=page_num)
-        for page in pager.pages(self.tap_stream_id,
-                                "GET", "/rest/api/2/search",
-                                params=params):
-            # sync comments and changelogs for each issue
-            sync_sub_streams(page)
-            for issue in page:
-                issue['fields'].pop('worklog', None)
-                # The JSON schema for the search endpoint indicates an "operations"
-                # field can be present. This field is self-referential, making it
-                # difficult to deal with - we would have to flatten the operations
-                # and just have each operation include the IDs of other operations
-                # it references. However the operations field has something to do
-                # with the UI within Jira - I believe the operations are parts of
-                # the "menu" bar for each issue. This is of questionable utility,
-                # so we decided to just strip the field out for now.
-                issue['fields'].pop('operations', None)
+        try:
+            for page in pager.pages(self.tap_stream_id,
+                                    "GET", "/rest/api/2/search",
+                                    params=params):
+                # sync comments and changelogs for each issue
+                sync_sub_streams(page)
+                for issue in page:
+                    issue['fields'].pop('worklog', None)
+                    # The JSON schema for the search endpoint indicates an "operations"
+                    # field can be present. This field is self-referential, making it
+                    # difficult to deal with - we would have to flatten the operations
+                    # and just have each operation include the IDs of other operations
+                    # it references. However the operations field has something to do
+                    # with the UI within Jira - I believe the operations are parts of
+                    # the "menu" bar for each issue. This is of questionable utility,
+                    # so we decided to just strip the field out for now.
+                    issue['fields'].pop('operations', None)
 
-            # Grab last_updated before transform in write_page
-            last_updated = utils.strptime_to_utc(page[-1]["fields"]["updated"])
+                # Grab last_updated before transform in write_page
+                last_updated = utils.strptime_to_utc(page[-1]["fields"]["updated"])
 
-            self.write_page(page)
+                self.write_page(page)
+
+        except Exception as e:
+            LOGGER.warn(f"Could not find issue page. Skipping. {e}")
+
 
             Context.set_bookmark(page_num_offset, pager.next_page_num)
             singer.write_state(Context.state)
