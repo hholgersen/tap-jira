@@ -55,17 +55,17 @@ def raise_if_bookmark_cannot_advance(worklogs):
 def sync_sub_streams(page):
     for issue in page:
         comments = issue["fields"].pop("comment")["comments"]
-        if comments and Context.is_selected(ISSUE_COMMENTS.tap_stream_id):
+        if comments: # and Context.is_selected(ISSUE_COMMENTS.tap_stream_id):
             for comment in comments:
                 comment["issueId"] = issue["id"]
             ISSUE_COMMENTS.write_page(comments)
         changelogs = issue.pop("changelog")["histories"]
-        if changelogs and Context.is_selected(CHANGELOGS.tap_stream_id):
+        if changelogs: # and Context.is_selected(CHANGELOGS.tap_stream_id):
             for changelog in changelogs:
                 changelog["issueId"] = issue["id"]
             CHANGELOGS.write_page(changelogs)
         transitions = issue.pop("transitions")
-        if transitions and Context.is_selected(ISSUE_TRANSITIONS.tap_stream_id):
+        if transitions: # and Context.is_selected(ISSUE_TRANSITIONS.tap_stream_id):
             for transition in transitions:
                 transition["issueId"] = issue["id"]
             ISSUE_TRANSITIONS.write_page(transitions)
@@ -128,12 +128,16 @@ def update_user_date(page):
         page['userStartDate'] = transform_user_date(page['userStartDate'])
 
     return page
+
+
 class Projects(Stream):
     def sync_on_prem(self):
         """ Sync function for the on prem instances"""
         projects = Context.client.request(
             self.tap_stream_id, "GET", "/rest/api/2/project",
             params={"expand": "description,lead,url,projectKeys"})
+
+        LOGGER.info(f"WE ARE IN THE PROJECTS. FOUND {len(projects)} projects.")
         for project in projects:
             # The Jira documentation suggests that a "versions" key may appear
             # in the project, but from my testing that hasn't been the case
@@ -142,7 +146,7 @@ class Projects(Stream):
             # appears.
             project.pop("versions", None)
         self.write_page(projects)
-        if Context.is_selected(VERSIONS.tap_stream_id):
+        if True: #Context.is_selected(VERSIONS.tap_stream_id):
             for project in projects:
                 path = "/rest/api/2/project/{}/version".format(project["id"])
                 pager = Paginator(Context.client, order_by="sequence")
@@ -151,12 +155,15 @@ class Projects(Stream):
                     for each_page in page:
                         each_page = update_user_date(each_page)
                     VERSIONS.write_page(page)
-        if Context.is_selected(COMPONENTS.tap_stream_id):
+        if True: #Context.is_selected(COMPONENTS.tap_stream_id):
             for project in projects:
                 path = "/rest/api/2/project/{}/component".format(project["id"])
                 pager = Paginator(Context.client)
                 for page in pager.pages(COMPONENTS.tap_stream_id, "GET", path):
-                    COMPONENTS.write_page(page)
+                    try:
+                        COMPONENTS.write_page(page)
+                    except Exception as e:
+                        LOGGER.warn(f"Exception when writing: {e}")
 
     def sync_cloud(self):
         """ Sync function for the cloud instances"""
@@ -178,7 +185,7 @@ class Projects(Stream):
                 # appears.
                 project.pop("versions", None)
             self.write_page(projects.get('values'))
-            if Context.is_selected(VERSIONS.tap_stream_id):
+            if True: #Context.is_selected(VERSIONS.tap_stream_id):
                 for project in projects.get('values'):
                     path = "/rest/api/2/project/{}/version".format(project["id"])
                     pager = Paginator(Context.client, order_by="sequence")
@@ -187,13 +194,20 @@ class Projects(Stream):
                         for each_page in page:
                             each_page = update_user_date(each_page)
 
-                        VERSIONS.write_page(page)
-            if Context.is_selected(COMPONENTS.tap_stream_id):
+                        try:
+                            COMPONENTS.write_page(page)
+                        except Exception as e:
+                            LOGGER.warn(f"Exception when writing: {e}")
+
+            if True: #Context.is_selected(COMPONENTS.tap_stream_id):
                 for project in projects.get('values'):
                     path = "/rest/api/2/project/{}/component".format(project["id"])
                     pager = Paginator(Context.client)
                     for page in pager.pages(COMPONENTS.tap_stream_id, "GET", path):
-                        COMPONENTS.write_page(page)
+                        try:
+                            COMPONENTS.write_page(page)
+                        except Exception as e:
+                            LOGGER.warn(f"Exception when writing: {e}")
 
             # `isLast` corresponds to whether it is the last page or not.
             if projects.get("isLast"):
@@ -207,8 +221,10 @@ class Projects(Stream):
         # instances, the new endpoint would be called which also suggests pagination, but for on prm instances the old endpoint would be called.
         # As we want to include both the cloud as well as the on-prem servers.
         if Context.client.is_on_prem_instance:
+            LOGGER.info("YAY WE ARE SYNCING ON PREM")
             self.sync_on_prem()
         else:
+            LOGGER.info("WTF WE ARE ON CLOUD?!?")
             self.sync_cloud()
 
 class ProjectTypes(Stream):
@@ -373,8 +389,7 @@ class DependencyException(Exception):
 
 def validate_dependencies():
     errs = []
-    selected = [s.tap_stream_id for s in Context.catalog.streams
-                if Context.is_selected(s.tap_stream_id)]
+    selected = [s.tap_stream_id for s in Context.catalog.streams ] #if Context.is_selected(s.tap_stream_id)]
     msg_tmpl = ("Unable to extract {0} data. "
                 "To receive {0} data, you also need to select {1}.")
     if VERSIONS.tap_stream_id in selected and PROJECTS.tap_stream_id not in selected:
