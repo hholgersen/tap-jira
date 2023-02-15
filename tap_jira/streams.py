@@ -34,6 +34,7 @@ def raise_if_bookmark_cannot_advance(worklogs):
     # `updated==T2`.
     #
     # OTOH, if you have 1 worklog with `updated==T1` and 1000 worklogs
+    # OTOH, if you have 1 worklog with `updated==T1` and 1000 worklogs
     # with `updated==T2`, first trip you see 1 worklog at T1 and 999
     # at T2 which this code will think is fine, but second trip
     # through you'll see 1000 worklogs at T2 which will fail
@@ -376,19 +377,19 @@ PROJECTS = Projects("projects", ["id"])
 CHANGELOGS = Stream("changelogs", ["id"], indirect_stream=True)
 
 ALL_STREAMS = [
-    # PROJECTS,
-    # VERSIONS,
-    # COMPONENTS,
-    # ProjectTypes("project_types", ["key"]),
-    # Stream("project_categories", ["id"], path="/rest/api/2/projectCategory"),
-    #Stream("resolutions", ["id"], path="/rest/api/2/resolution"),
+    PROJECTS,
+    VERSIONS,
+    COMPONENTS,
+    ProjectTypes("project_types", ["key"]),
+    Stream("project_categories", ["id"], path="/rest/api/2/projectCategory"),
+    Stream("resolutions", ["id"], path="/rest/api/2/resolution"),
     #Stream("roles", ["id"], path="/rest/api/2/role"),
     #Users("users", ["accountId"]),
     ISSUES,
-    # ISSUE_COMMENTS,
-    # CHANGELOGS,
-    # ISSUE_TRANSITIONS,
-    # Worklogs("worklogs", ["id"]),
+    ISSUE_COMMENTS,
+    CHANGELOGS,
+    ISSUE_TRANSITIONS,
+    Worklogs("worklogs", ["id"]),
 ]
 
 ALL_STREAM_IDS = [s.tap_stream_id for s in ALL_STREAMS]
