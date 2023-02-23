@@ -283,7 +283,7 @@ class Issues(Stream):
         start_date = last_updated.astimezone(pytz.timezone(timezone)).strftime("%Y-%m-%d %H:%M")
         projects = Context.config.get("project")
         
-        jql = f"project in ({projects_instring}) and updated >= '{start_date}' order by updated asc"
+        jql = f"updated >= '{start_date}' order by updated asc"
 
         if projects:
             quoted_projects = [f"'{n}'" for n in projects]
