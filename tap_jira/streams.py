@@ -178,6 +178,7 @@ class Projects(Stream):
                 "expand": "description,lead,url,projectKeys",
                 "maxResults": DEFAULT_PAGE_SIZE, # maximum number of results to fetch in a page.
                 "startAt": offset #the offset to start at for the next page
+
             }
             projects = Context.client.request(
                 self.tap_stream_id, "GET", "/rest/api/2/project/search",
@@ -280,8 +281,16 @@ class Issues(Stream):
         last_updated = Context.update_start_date_bookmark(updated_bookmark)
         timezone = Context.retrieve_timezone()
         start_date = last_updated.astimezone(pytz.timezone(timezone)).strftime("%Y-%m-%d %H:%M")
+        projects = Context.config.get("project")
+        
+        jql = f"project in ({projects_instring}) and updated >= '{start_date}' order by updated asc"
 
-        jql = "updated >= '{}' order by updated asc".format(start_date)
+        if projects:
+            quoted_projects = [f"'{n}'" for n in projects]
+            projects_instring = ','.join(quoted_projects)
+            q_part = f"project in ({projects_instring})"
+            jql = f"{q_part} and {jql}"
+
         params = {"fields": "*all",
                   "expand": "changelog,transitions",
                   "validateQuery": "strict",
